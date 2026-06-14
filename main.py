@@ -13,6 +13,9 @@ from ui.messages import DefaultErrorMessageBox
 from ui.matrices.matrix_dialog import MatrixDialog
 from ui.matrices.matrix_creator import MatrixCreator
 from ui.matrices.shape_dialog import ShapeDialog
+from ui.algorithms.pick_matrices_dialog import PickMatricesDialog
+
+from algorithms.linear_systems import gauss_elimination as gs
 
 # TODO: Shape Dialog -> a dialog that returns shape of new matrix
 
@@ -32,43 +35,12 @@ class Window(qtw.QMainWindow):
         self.layout.setSizeConstraint(qtw.QGridLayout.SizeConstraint.SetFixedSize)
         self.central_widget.setLayout(self.layout)
 
-        self.toolbar = qtw.QToolBar("Files")
-        self.toolbar.setMovable(False)
-        self.addToolBar(self.toolbar)
-
-        load_matrices = qtg.QAction(qtg.QIcon("img/load.png"),"Load", self)
-        load_matrices.setStatusTip("Load matrices from a file")
-        load_matrices.triggered.connect(self.open_load_dialog)
-        self.toolbar.addAction(load_matrices)
-
-        quick_load = qtg.QAction(qtg.QIcon("img/quick-load.png"), "Quick Load", self)
-        quick_load.setStatusTip("Quickly load up matrices")
-        quick_load.triggered.connect(self.load_from_current_file)
-        self.toolbar.addAction(quick_load)
-
-        save_matrices = qtg.QAction(qtg.QIcon("img/save.png"), "Save", self)
-        save_matrices.setStatusTip("Save matrices from to a file")
-        save_matrices.triggered.connect(self.open_save_dialog)
-        self.toolbar.addAction(save_matrices)
-
-        save_matrices_quickly = qtg.QAction(qtg.QIcon("img/quicksave.png"), "Quick Save", self)
-        save_matrices_quickly.setStatusTip("Save matrices quickly.")
-        save_matrices_quickly.triggered.connect(self.save_to_current_file)
-        self.toolbar.addAction(save_matrices_quickly)
-
-        add_matrix = qtg.QAction(qtg.QIcon("img/add_matrix.png"), "Add a matrix", self)
-        add_matrix.setStatusTip("Add a matrix specified by you")
-        add_matrix.triggered.connect(self.open_matrix_creator)
-        self.toolbar.addAction(add_matrix)
-
-        add_eye = qtg.QAction(qtg.QIcon("img/eye.png"), "Add an eye", self)
-        add_eye.setStatusTip("Add an eye to matrices")
-        add_eye.triggered.connect(self.open_eye_menu)
-        self.toolbar.addAction(add_eye)
+        self._create_file_menu()
+        self._create_algorithm_menu()
+        self._create_toolbar()
 
         self.buttons_group = qtw.QButtonGroup(self.layout)
         self.buttons_group.idClicked.connect(self.open_matrix_dialog)
-        # Initial load of matrices
         self.update_matrices_ui()
 
     @qtc.Slot()
@@ -81,7 +53,7 @@ class Window(qtw.QMainWindow):
         for index, matrix in enumerate(self.ctx["matrices"]):
             button = qtw.QPushButton(f"Matrix {index}", self)
             self.buttons_group.addButton(button, index)
-            self.layout.addWidget(button, index//3 + 1, index%3 + 1)
+            self.layout.addWidget(button, index // 3 + 1, index % 3 + 1)
 
     @qtc.Slot()
     def append_matrix_in_ui(self, matrix: np.ndarray):
@@ -90,6 +62,31 @@ class Window(qtw.QMainWindow):
         button = qtw.QPushButton(f"Matrix {index}", self)
         self.buttons_group.addButton(button, index)
         self.layout.addWidget(button, index // 3 + 1, index % 3 + 1)
+
+    def _create_file_menu(self):
+        menu_bar = self.menuBar()
+        file_menu = qtw.QMenu("Files", menu_bar)
+        menu_bar.addMenu(file_menu)
+
+        load_matrices = qtg.QAction(qtg.QIcon("img/load.png"), "Load matrices", self)
+        load_matrices.setStatusTip("Load matrices from a file")
+        load_matrices.triggered.connect(self.open_load_dialog)
+        file_menu.addAction(load_matrices)
+
+        quick_load = qtg.QAction(qtg.QIcon("img/quick-load.png"), "Quick Load", self)
+        quick_load.setStatusTip("Quickly load up matrices")
+        quick_load.triggered.connect(self.load_from_current_file)
+        file_menu.addAction(quick_load)
+
+        save_matrices = qtg.QAction(qtg.QIcon("img/save.png"), "Save", self)
+        save_matrices.setStatusTip("Save matrices from to a file")
+        save_matrices.triggered.connect(self.open_save_dialog)
+        file_menu.addAction(save_matrices)
+
+        save_matrices_quickly = qtg.QAction(qtg.QIcon("img/quicksave.png"), "Quick Save", self)
+        save_matrices_quickly.setStatusTip("Save matrices quickly.")
+        save_matrices_quickly.triggered.connect(self.save_to_current_file)
+        file_menu.addAction(save_matrices_quickly)
 
     @qtc.Slot()
     def open_load_dialog(self):
@@ -133,6 +130,44 @@ class Window(qtw.QMainWindow):
         except:
             error_message_box = DefaultErrorMessageBox()
             error_message_box.exec()
+
+    def _create_algorithm_menu(self):
+        algorithm_menu = qtw.QMenu("Algorithms")
+        self.menuBar().addMenu(algorithm_menu)
+
+        # menu_bar.addAction(qtw.QWidgetAction(qtw.QLabel("Systems of equations")))
+
+        gaussian_elimination = qtg.QAction(qtg.QIcon("img/gaussian_icon.png"), "Gaussian elimination", self)
+        gaussian_elimination.setStatusTip("Solve system of equation using Gaussian Elimination algorithm")
+        gaussian_elimination.triggered.connect(self.open_gaussian_menu)
+        algorithm_menu.addAction(gaussian_elimination)
+
+    def open_gaussian_menu(self):
+        gaussian_menu = PickMatricesDialog(self.ctx, ("A", "b"), "Gaussian Elimination")
+        gaussian_menu.args_collected.connect(self.do_gaussian)
+        gaussian_menu.exec()
+
+    def do_gaussian(self, matrices: list[np.ndarray]):
+        A, b = matrices
+        x = gs(A, b)
+        x_dialog = MatrixDialog(x)
+        x_dialog.theres_matrix.connect(self.append_matrix_in_ui)
+        x_dialog.exec()
+
+    def _create_toolbar(self):
+        self.toolbar = qtw.QToolBar("Files")
+        self.toolbar.setMovable(False)
+        self.addToolBar(self.toolbar)
+
+        add_matrix = qtg.QAction(qtg.QIcon("img/add_matrix.png"), "Add a matrix", self)
+        add_matrix.setStatusTip("Add a matrix specified by you")
+        add_matrix.triggered.connect(self.open_matrix_creator)
+        self.toolbar.addAction(add_matrix)
+
+        add_eye = qtg.QAction(qtg.QIcon("img/eye.png"), "Add an eye", self)
+        add_eye.setStatusTip("Add an eye to matrices")
+        add_eye.triggered.connect(self.open_eye_menu)
+        self.toolbar.addAction(add_eye)
 
     @qtc.Slot()
     def open_matrix_creator(self):
