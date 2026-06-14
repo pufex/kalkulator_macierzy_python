@@ -27,7 +27,7 @@ class Window(qtw.QMainWindow):
         self.matrixButtons = []
 
         self.setWindowTitle("Matrices")
-        self.setMinimumWidth(250)
+        self.setMinimumWidth(275)
 
         self.central_widget = qtw.QWidget(self)
         self.setCentralWidget(self.central_widget)
