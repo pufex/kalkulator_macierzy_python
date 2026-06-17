@@ -27,6 +27,7 @@ class LoadMenu(qtw.QDialog):
             self.ctx["matrices"].clear()
             self.ctx["matrices"] = matrices
         except:
+            print(1)
             messageBox = qtw.QMessageBox()
             messageBox.setText("There was an error while loading up matrices.")
             messageBox.setIcon(messageBox.Icon.Critical)

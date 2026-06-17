@@ -23,7 +23,7 @@ class PickMatricesDialog(qtw.QDialog):
         for i in range(len(names)):
             combo_box = qtw.QComboBox()
             for j, _ in enumerate(ctx["matrices"]):
-                combo_box.addItem(f"Matrix {j + 1}")
+                combo_box.addItem(f"Matrix {j}")
             self.combo_boxes.append(combo_box)
             self.form.addRow(names[i], combo_box)
 

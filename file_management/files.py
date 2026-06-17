@@ -125,11 +125,16 @@ class FileManager:
         self._path = check_path_out(path)
 
         i = 0
+        n = 0
         for el in os.listdir(self._path):
             if FileManager._check_if_its_save_file(el):
-                i = i + 1
+                start = el.find("_") + 1
+                end = el.find(".")
+                number = int(el[start:end])
+                if n < number:
+                    n = number
 
-        self._file_n = i
+        self._file_n = n
         self._config = FileManager._Config(self)
 
     @property
@@ -146,18 +151,22 @@ class FileManager:
 
     def load_saved_file(self, i):
         matrices = []
-        with open(FileManager.file_path(self, i), "r") as file:
-            line = file.readline()
-            while line != "":
-                w = int(line.removesuffix("\n"))
-                l = []
-                for j in range(w):
-                    l.append([float(j) for j in file.readline().split()])
-                matrices.append(np.array(l))
+        try:
+            with open(FileManager.file_path(self, i), "r") as file:
                 line = file.readline()
-        self._config.current_file = i
-        self._config.update_config_file(self._config.props)
-        print(self._config.current_file)
+                while line != "":
+                    w = int(line.removesuffix("\n"))
+                    l = []
+                    for j in range(w):
+                        l.append([float(j) for j in file.readline().split()])
+                    matrices.append(np.array(l))
+                    line = file.readline()
+        except FileNotFoundError:
+            print("Nie ma pliku")
+            open(FileManager.file_path(self, i), "w").close()
+        finally:
+            self._config.current_file = i
+            self._config.update_config_file(self._config.props)
         return matrices
 
     def save_to_file(self, i, matrices):

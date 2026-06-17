@@ -42,15 +42,7 @@ class MatrixDialog(qtw.QDialog):
 
     @qtc.Slot()
     def handle_cell_change(self, i, j):
-        """
-        Handles modifications of cells in the table widget.
-        Updates the corresponding element in the underlying matrix. Plays a warning sound
-        if the entered value is not a valid float.
 
-        Args:
-            i (int): Row index of the changed cell.
-            j (int): Column index of the changed cell.
-        """
         item = self.table.item(i, j)
         if item:
             try:

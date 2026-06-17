@@ -5,22 +5,11 @@ from ui.messages import DefaultErrorMessageBox
 
 
 class ShapeDialog(qtw.QDialog):
-    """
-    A dialog window that prompts the user to enter the dimensions (rows and columns) of a matrix.
 
-    Signals:
-        commited (qtc.Signal): Emitted when the user submits the shape.
-                               (Passes a tuple of two integers (rows, cols)).
-    """
     commited = qtc.Signal(tuple)
 
     def __init__(self, title = "Give matrix shape"):
-        """
-        Initializes the ShapeDialog.
 
-        Args:
-            title (str, optional): The title of the dialog window. Defaults to "Give matrix shape".
-        """
         super().__init__()
         self.setWindowTitle(title)
         self.form_layout = qtw.QFormLayout()
